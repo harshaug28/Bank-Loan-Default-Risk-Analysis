@@ -1,0 +1,385 @@
+// ============================================================
+// POWER BI DAX MEASURES — Bank Loan Default Risk Dashboard
+// Paste each measure into Power BI: Modeling > New Measure
+// ============================================================
+
+
+// ============================================================
+// TABLE: _Measures (create an empty table for all measures)
+// In Power BI: Enter Data > create blank table named "_Measures"
+// ============================================================
+
+
+// ============================================================
+// SECTION 1: CORE KPI MEASURES
+// ============================================================
+
+// 1.1 Total Loans
+Total Loans = 
+COUNTROWS(loan_data)
+
+// 1.2 Total Defaults
+Total Defaults = 
+CALCULATE(
+    COUNTROWS(loan_data),
+    loan_data[DefaultFlag] = 1
+)
+
+// 1.3 Default Rate %
+Default Rate % = 
+DIVIDE(
+    [Total Defaults],
+    [Total Loans],
+    0
+)
+
+// 1.4 Default Rate % Formatted
+Default Rate % Label = 
+FORMAT([Default Rate %], "0.0%")
+
+// 1.5 Total Portfolio Value ($)
+Total Portfolio $ = 
+SUM(loan_data[LoanAmount])
+
+// 1.6 Capital at Risk ($)
+Capital at Risk $ = 
+CALCULATE(
+    SUM(loan_data[LoanAmount]),
+    loan_data[DefaultFlag] = 1
+)
+
+// 1.7 Capital at Risk % of Portfolio
+Capital at Risk % = 
+DIVIDE([Capital at Risk $], [Total Portfolio $], 0)
+
+// 1.8 Average Loan Amount
+Avg Loan Amount = 
+AVERAGE(loan_data[LoanAmount])
+
+// 1.9 Average DTI
+Avg DTI = 
+AVERAGE(loan_data[DTI])
+
+// 1.10 Average Interest Rate
+Avg Interest Rate = 
+AVERAGE(loan_data[InterestRate])
+
+// 1.11 Average Credit History (years)
+Avg Credit History Yrs = 
+AVERAGE(loan_data[CreditHistoryYears])
+
+// 1.12 Total Recoverable (estimated — 38.4% recovery rate)
+Total Recoverable $ = 
+[Capital at Risk $] * 0.384
+
+
+// ============================================================
+// SECTION 2: YEAR-OVER-YEAR COMPARISON
+// ============================================================
+
+// 2.1 Default Rate Previous Year
+Default Rate PY = 
+CALCULATE(
+    [Default Rate %],
+    SAMEPERIODLASTYEAR(loan_data[IssueDate])
+)
+
+// 2.2 Default Rate YoY Change (percentage points)
+Default Rate YoY pp = 
+([Default Rate %] - [Default Rate PY]) * 100
+
+// 2.3 Default Rate YoY Direction
+Default Rate YoY Label = 
+VAR change = [Default Rate YoY pp]
+RETURN
+    IF(
+        change > 0,
+        "▲ " & FORMAT(change, "0.0") & "pp vs prior year",
+        "▼ " & FORMAT(ABS(change), "0.0") & "pp vs prior year"
+    )
+
+// 2.4 Portfolio YoY Change
+Portfolio YoY % = 
+VAR current = [Total Portfolio $]
+VAR prior = CALCULATE([Total Portfolio $], SAMEPERIODLASTYEAR(loan_data[IssueDate]))
+RETURN DIVIDE(current - prior, prior, 0)
+
+
+// ============================================================
+// SECTION 3: RISK SEGMENTATION MEASURES
+// ============================================================
+
+// 3.1 High Risk Loan Count (Grade E/F)
+High Risk Loans = 
+CALCULATE(
+    COUNTROWS(loan_data),
+    loan_data[Grade] IN {"E", "F"}
+)
+
+// 3.2 High Risk Default Rate
+High Risk Default Rate = 
+CALCULATE(
+    [Default Rate %],
+    loan_data[Grade] IN {"E", "F"}
+)
+
+// 3.3 DTI Breach Count (DTI > 43%)
+DTI Breach Count = 
+CALCULATE(
+    COUNTROWS(loan_data),
+    loan_data[DTI] > 43
+)
+
+// 3.4 DTI Breach Default Rate
+DTI Breach Default Rate = 
+CALCULATE(
+    [Default Rate %],
+    loan_data[DTI] > 43
+)
+
+// 3.5 High Revolving Utilization Count (≥75%)
+High Revol Util Count = 
+CALCULATE(
+    COUNTROWS(loan_data),
+    loan_data[RevolvingUtilization] >= 75
+)
+
+// 3.6 High Revol Util Default Rate
+High Revol Util Default Rate = 
+CALCULATE(
+    [Default Rate %],
+    loan_data[RevolvingUtilization] >= 75
+)
+
+// 3.7 Thin File Count (credit history < 3 years)
+Thin File Count = 
+CALCULATE(
+    COUNTROWS(loan_data),
+    loan_data[CreditHistoryYears] < 3
+)
+
+// 3.8 Debt Consolidation Default Rate
+Debt Consol Default Rate = 
+CALCULATE(
+    [Default Rate %],
+    loan_data[Purpose] = "Debt Consolidation"
+)
+
+// 3.9 Default Rate by Grade (used in matrix/table visual)
+Default Rate by Grade = 
+DIVIDE(
+    CALCULATE(COUNTROWS(loan_data), loan_data[DefaultFlag] = 1),
+    COUNTROWS(loan_data),
+    0
+)
+
+
+// ============================================================
+// SECTION 4: BUSINESS IMPACT MEASURES
+// ============================================================
+
+// 4.1 Savings from DTI Cap Policy ($)
+// Assumes 34% of DTI-breach defaults are preventable
+DTI Cap Savings $ = 
+CALCULATE(
+    SUM(loan_data[LoanAmount]),
+    loan_data[DefaultFlag] = 1,
+    loan_data[DTI] > 43
+) * 0.34
+
+// 4.2 Savings from Early Intervention ($)
+// Assumes 22% reduction in high-util defaults
+Early Intervention Savings $ = 
+CALCULATE(
+    SUM(loan_data[LoanAmount]),
+    loan_data[DefaultFlag] = 1,
+    loan_data[RevolvingUtilization] >= 75
+) * 0.22
+
+// 4.3 NIM Improvement from Repricing ($)
+// Grade D-F loans underpriced by ~180 bps
+Repricing NIM Gain $ = 
+CALCULATE(
+    SUM(loan_data[LoanAmount]),
+    loan_data[Grade] IN {"D", "E", "F"}
+) * 0.018
+
+// 4.4 Secured Product Savings ($)
+// 40% charge-off reduction for thin-file → secured routing
+Secured Product Savings $ = 
+CALCULATE(
+    SUM(loan_data[LoanAmount]),
+    loan_data[DefaultFlag] = 1,
+    loan_data[CreditHistoryYears] < 3
+) * 0.40
+
+// 4.5 Total Business Impact ($) — all 4 recommendations combined
+Total Business Impact $ = 
+[DTI Cap Savings $] + [Early Intervention Savings $] + [Repricing NIM Gain $] + [Secured Product Savings $]
+
+// 4.6 Formatted Total Impact Label
+Total Impact Label = 
+"$" & FORMAT([Total Business Impact $] / 1000000, "0.0") & "M combined annual impact"
+
+
+// ============================================================
+// SECTION 5: CARD VISUALS — FORMATTED LABELS
+// ============================================================
+
+// 5.1 Portfolio Label (formatted in $M)
+Portfolio Label = 
+"$" & FORMAT([Total Portfolio $] / 1000000, "0.0") & "M"
+
+// 5.2 Capital at Risk Label
+Capital at Risk Label = 
+"$" & FORMAT([Capital at Risk $] / 1000000, "0.0") & "M"
+
+// 5.3 Default Rate Label
+Default Rate Label = 
+FORMAT([Default Rate %], "0.0%")
+
+// 5.4 DTI Cap Policy Impact Label
+DTI Cap Label = 
+"$" & FORMAT([DTI Cap Savings $] / 1000, "0") & "K preventable"
+
+// 5.5 Recovery Rate (industry benchmark comparison)
+Recovery Rate = 
+DIVIDE([Total Recoverable $], [Capital at Risk $], 0)
+
+// 5.6 Recovery vs Benchmark
+Recovery vs Benchmark = 
+FORMAT([Recovery Rate] - 0.441, "+0.0%;-0.0%") & " vs 44.1% avg"
+
+
+// ============================================================
+// SECTION 6: DYNAMIC TITLES & TOOLTIPS
+// ============================================================
+
+// 6.1 Selected Grade Title
+Selected Grade Title = 
+VAR selectedGrade = SELECTEDVALUE(loan_data[Grade], "All Grades")
+RETURN "Default Analysis — " & selectedGrade
+
+// 6.2 Selected Purpose Title
+Selected Purpose Title =
+VAR sel = SELECTEDVALUE(loan_data[Purpose], "All Purposes")
+RETURN "Risk Profile: " & sel
+
+// 6.3 Filter Summary
+Active Filter Summary =
+VAR yr = SELECTEDVALUE(loan_data[IssueYear], "All Years")
+VAR grd = SELECTEDVALUE(loan_data[Grade], "All Grades")
+RETURN "Showing: " & yr & " | " & grd
+
+// 6.4 Risk Alert Message
+Risk Alert =
+VAR dr = [Default Rate %]
+RETURN
+    IF(dr > 0.30, "CRITICAL: Default rate exceeds 30% threshold",
+    IF(dr > 0.22, "WARNING: Default rate above portfolio average",
+    "NORMAL: Default rate within acceptable range"))
+
+
+// ============================================================
+// SECTION 7: TREND ANALYSIS
+// ============================================================
+
+// 7.1 Rolling 3-Month Average Default Rate
+Default Rate Rolling 3M =
+AVERAGEX(
+    DATESINPERIOD(
+        loan_data[IssueDate],
+        LASTDATE(loan_data[IssueDate]),
+        -3,
+        MONTH
+    ),
+    [Default Rate %]
+)
+
+// 7.2 Loan Volume (monthly)
+Monthly Loan Volume = 
+CALCULATE(
+    SUM(loan_data[LoanAmount]),
+    DATESMTD(loan_data[IssueDate])
+)
+
+// 7.3 Cumulative Portfolio Value
+Cumulative Portfolio = 
+CALCULATE(
+    [Total Portfolio $],
+    DATESYTD(loan_data[IssueDate])
+)
+
+// 7.4 Month over Month Default Rate Change
+Default Rate MoM Change = 
+VAR currentMonth = [Default Rate %]
+VAR priorMonth = CALCULATE(
+    [Default Rate %],
+    DATEADD(loan_data[IssueDate], -1, MONTH)
+)
+RETURN currentMonth - priorMonth
+
+
+// ============================================================
+// SECTION 8: WHAT-IF / SCENARIO MEASURES
+// ============================================================
+// These use a What-If parameter table named "DTI_Threshold"
+// Create via: Modeling > New Parameter > Range 20 to 60, increment 1
+
+// 8.1 Default Rate at Selected DTI Threshold
+Default Rate at DTI Threshold =
+CALCULATE(
+    [Default Rate %],
+    loan_data[DTI] <= DTI_Threshold[DTI_Threshold Value]
+)
+
+// 8.2 Loans Rejected at Threshold
+Loans Rejected at Threshold =
+CALCULATE(
+    COUNTROWS(loan_data),
+    loan_data[DTI] > DTI_Threshold[DTI_Threshold Value]
+)
+
+// 8.3 Defaults Prevented at Threshold
+Defaults Prevented at Threshold =
+CALCULATE(
+    [Total Defaults],
+    loan_data[DTI] > DTI_Threshold[DTI_Threshold Value]
+)
+
+// 8.4 Savings at Threshold
+Savings at Threshold $ =
+CALCULATE(
+    SUM(loan_data[LoanAmount]),
+    loan_data[DefaultFlag] = 1,
+    loan_data[DTI] > DTI_Threshold[DTI_Threshold Value]
+)
+
+
+// ============================================================
+// SECTION 9: RANKING MEASURES (for Top N visuals)
+// ============================================================
+
+// 9.1 Purpose Default Rate Rank
+Purpose Default Rank =
+RANKX(
+    ALL(loan_data[Purpose]),
+    [Default Rate %],
+    ,
+    DESC,
+    DENSE
+)
+
+// 9.2 Grade Capital at Risk Rank
+Grade Risk Rank =
+RANKX(
+    ALL(loan_data[Grade]),
+    [Capital at Risk $],
+    ,
+    DESC,
+    DENSE
+)
+
+// 9.3 Top 3 Riskiest Purposes Flag
+Is Top 3 Risk Purpose =
+IF([Purpose Default Rank] <= 3, "Top 3 High Risk", "Standard")

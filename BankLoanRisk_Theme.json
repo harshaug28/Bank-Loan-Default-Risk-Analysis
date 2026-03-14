@@ -1,0 +1,97 @@
+{
+  "name": "Bank Loan Risk — Financial Dark Theme",
+  "dataColors": [
+    "#3B8BD4",
+    "#E24B4A",
+    "#1D9E75",
+    "#EF9F27",
+    "#7F77DD",
+    "#D85A30",
+    "#5DCAA5",
+    "#FAC775",
+    "#85B7EB",
+    "#F09595"
+  ],
+  "background": "#FFFFFF",
+  "foreground": "#2C2C2A",
+  "tableAccent": "#3B8BD4",
+  "visualStyles": {
+    "*": {
+      "*": {
+        "fontFamily": [{ "value": "Segoe UI" }],
+        "fontSize": [{ "value": 11 }],
+        "color": [{ "solid": { "color": "#2C2C2A" } }]
+      }
+    },
+    "card": {
+      "*": {
+        "background": [{ "solid": { "color": "#F5F5F0" } }],
+        "border": [{ "color": { "solid": { "color": "#D3D1C7" } }, "show": true }]
+      }
+    },
+    "columnChart": {
+      "*": {
+        "dataPoint": [{ "defaultColor": { "solid": { "color": "#3B8BD4" } } }],
+        "legend": [{ "show": false }]
+      }
+    },
+    "barChart": {
+      "*": {
+        "dataPoint": [{ "defaultColor": { "solid": { "color": "#3B8BD4" } } }],
+        "legend": [{ "show": false }]
+      }
+    },
+    "lineChart": {
+      "*": {
+        "dataPoint": [{ "defaultColor": { "solid": { "color": "#E24B4A" } } }],
+        "lineWidth": [{ "value": 2 }]
+      }
+    },
+    "donutChart": {
+      "*": {
+        "legend": [{ "show": true, "position": "Bottom" }]
+      }
+    },
+    "slicer": {
+      "*": {
+        "background": [{ "solid": { "color": "#F5F5F0" } }],
+        "border": [{ "color": { "solid": { "color": "#D3D1C7" } }, "show": true }]
+      }
+    }
+  },
+  "textClasses": {
+    "title": {
+      "color": "#2C2C2A",
+      "fontFace": "Segoe UI",
+      "fontSize": 12,
+      "fontWeight": "bold"
+    },
+    "header": {
+      "color": "#2C2C2A",
+      "fontFace": "Segoe UI",
+      "fontSize": 14,
+      "fontWeight": "bold"
+    },
+    "label": {
+      "color": "#888780",
+      "fontFace": "Segoe UI",
+      "fontSize": 10
+    },
+    "callout": {
+      "color": "#2C2C2A",
+      "fontFace": "Segoe UI",
+      "fontSize": 28,
+      "fontWeight": "bold"
+    }
+  },
+  "page": {
+    "background": {
+      "color": "#FFFFFF",
+      "transparency": 0
+    },
+    "wallpaper": {
+      "color": "#F5F5F0",
+      "transparency": 0
+    }
+  }
+}
