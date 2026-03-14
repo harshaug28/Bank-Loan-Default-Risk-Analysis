@@ -185,4 +185,4 @@ MIT License — free to use, adapt, and build on.
 
 ---
 
-*Built by [Your Name] | [LinkedIn](https://linkedin.com/in/yourprofile) | [Portfolio](https://yourwebsite.com)*
+*Built by Harsh Patel | [LinkedIn](linkedin.com/in/harshpatel2882000)
