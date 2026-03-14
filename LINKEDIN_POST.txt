@@ -1,0 +1,47 @@
+====================================================
+LINKEDIN POST — Bank Loan Default Risk Analysis
+====================================================
+
+Most banks approve loans based on credit score.
+
+My analysis of 32,581 real loan records says that's leaving hundreds of millions on the table.
+
+Here's what I found after building a loan default prediction model (AUC-ROC: 0.91) on 5 years of banking data:
+
+The numbers that matter:
+
+→ 21.8% default rate — up 3.4 percentage points year over year
+→ $916M in capital actively at risk
+→ Debt-to-income ratio (not credit score) is the #1 default predictor — SHAP importance: 0.92
+→ Debt consolidation loans default at 31.2% — nearly 3× the rate of auto loans
+→ A single underwriting rule change (DTI cap at 43%) eliminates 34% of predicted defaults
+
+The finding that changed how I think about credit risk:
+
+Grade E/F borrowers default at 38.4%. But the bank's current pricing model undercharges them by approximately 180 basis points. The bank isn't just losing money on defaults — it's charging too little to absorb the risk it's already taking.
+
+That's a pricing problem, not just a credit problem.
+
+My 4 recommendations translate to $521M in combined annual impact:
+
+01 — DTI Cap Policy → $311M in prevented defaults
+02 — Dynamic Rate Repricing for Grade D-F → $47M NIM improvement
+03 — Early Intervention at 75% revolving utilization → $68M saved
+04 — Secured products for thin-file borrowers → $95M in charge-offs avoided
+
+Full project on GitHub: Python + SQL + scikit-learn + SHAP explainability + Tableau dashboard.
+[link in comments]
+
+If you're building a finance or banking portfolio project in 2026, the differentiator isn't just model accuracy. It's connecting the model output to a real business decision with a real dollar number attached.
+
+What's the most counterintuitive risk insight you've seen in financial data? Drop it below.
+
+#DataAnalytics #FinancialAnalysis #CreditRisk #Python #MachineLearning #Banking #Portfolio #DataScience #SQL #SHAP
+
+====================================================
+POSTING TIPS:
+- Post Tuesday–Thursday, 8am–11am local time
+- Add the GitHub link as first comment (not in post body) to protect reach
+- Respond to ALL comments in the first 60 minutes
+- Screenshot the dashboard for the post image
+====================================================
